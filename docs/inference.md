@@ -12,34 +12,37 @@
 
 #### Steps
 
-1. **Clone the Stable Diffusion Repository**:
-   - If using a specific implementation, clone its repository. For example:
-     ```bash
-     git clone https://github.com/CompVis/stable-diffusion.git
-     cd stable-diffusion
-     ```
+1. **Repository Cloning**:
+   - Cloning the Stable Diffusion repository is not strictly necessary if you are using the `diffusers` library from Hugging Face. The library provides a pre-packaged solution for using Stable Diffusion without needing the original repository.
 
-2. **Download the Model Weights**:
-   - Ensure you have access to the model weights. You might need to agree to a model license or terms of use.
-   - Use a service like Hugging Face's Model Hub:
-     ```bash
+2. **Download and Cache the Model Weights**:
+   - Download the model weights once and store them locally to avoid repeated downloads.
+   - Use Hugging Face's `diffusers` library to handle caching automatically. The model will be downloaded only once and stored in the cache directory (e.g., `~/.cache/huggingface`).
+   - Example setup:
+     ```python
      from diffusers import StableDiffusionPipeline
+     import torch
+
+     # First-time model download and caching
      model_id = "CompVis/stable-diffusion-v1-4"
-     pipe = StableDiffusionPipeline.from_pretrained(model_id)
+     pipe = StableDiffusionPipeline.from_pretrained(model_id, cache_dir="./model_cache")
+
+     # Move model to GPU if available
+     device = "cuda" if torch.cuda.is_available() else "cpu"
+     pipe = pipe.to(device)
      ```
 
 3. **Set Up the Inference Script**:
-   - Create a Python script that initializes the model and runs inference.
+   - Create a Python script that initializes the model and runs inference using the cached model.
    - Example `inference.py`:
      ```python
      from diffusers import StableDiffusionPipeline
      import torch
 
-     # Load model and move it to GPU if available
+     # Load model from local cache
      model_id = "CompVis/stable-diffusion-v1-4"
+     pipe = StableDiffusionPipeline.from_pretrained(model_id, cache_dir="./model_cache")
      device = "cuda" if torch.cuda.is_available() else "cpu"
-
-     pipe = StableDiffusionPipeline.from_pretrained(model_id)
      pipe = pipe.to(device)
 
      # Define the prompt
@@ -74,3 +77,5 @@
 
 6. **Review and Adjust**:
    - Check the generated outputs and adjust parameters or prompts as needed.
+
+This approach ensures that the model weights are downloaded only once and reused from the local cache, saving time and bandwidth in subsequent runs.
