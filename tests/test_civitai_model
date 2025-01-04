@@ -1,0 +1,29 @@
+```python
+import unittest
+from src.inference import load_model, generate_image
+
+class TestCivitaiModel(unittest.TestCase):
+
+    def setUp(self):
+        """Load the Civitai model for testing."""
+        self.civitai_model_path = "/workspace/ai_models/realisticVisionV60B1_v51HyperVAE.safetensors"
+        self.pipe = load_model(self.civitai_model_path)
+
+    def test_generate_image_with_civitai_model(self):
+        """Test image generation with a model downloaded from Civitai."""
+        prompt = "A serene landscape with mountains and a river"
+        image = generate_image(prompt, self.pipe)
+        self.assertIsNotNone(image, "The generated image should not be None.")
+        self.assertTrue(hasattr(image, 'save'), "The result should have a 'save' method to ensure it's an image object.")
+
+    def test_invalid_prompt(self):
+        """Test handling of invalid prompts with the Civitai model."""
+        invalid_prompt = ""
+        with self.assertRaises(ValueError):
+            generate_image(invalid_prompt, self.pipe)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+This test suite ensures that the Civitai model can generate images and handle invalid inputs correctly. It checks if the image generation process completes without errors and verifies that the generated image is a valid object with a `save` method.

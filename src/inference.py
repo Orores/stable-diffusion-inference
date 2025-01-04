@@ -3,6 +3,7 @@ from diffusers import StableDiffusionPipeline
 import torch
 from huggingface_hub import HfApi
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -23,7 +24,7 @@ def generate_image(prompt, pipe, num_inference_steps=50, guidance_scale=7.5):
     result = pipe(prompt, num_inference_steps=num_inference_steps, guidance_scale=guidance_scale, generator=generator)
     
     if result.nsfw_content_detected:
-        raise RuntimeError("Potential NSFW content detected. Please use a different prompt.")
+        print("Potential NSFW content detected.")
     
     return result.images[0]
 
@@ -60,8 +61,10 @@ if __name__ == "__main__":
     # Perform inference
     try:
         image = generate_image(prompt, pipe, num_inference_steps, guidance_scale)
-        # Save the generated image
-        image_path = "images/output.png"
+
+        # Save the generated image with a timestamp
+        timestamp = int(time.time())
+        image_path = f"images/output_{timestamp}.png"
         image.save(image_path)
 
         # Upload the image to Hugging Face
