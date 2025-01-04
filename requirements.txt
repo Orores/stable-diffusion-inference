@@ -4,3 +4,4 @@ torchaudio
 diffusers
 transformers
 accelerate
+realesrgan
