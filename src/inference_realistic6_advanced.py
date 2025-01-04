@@ -1,5 +1,10 @@
+import os
 import torch
 from diffusers import StableDiffusionPipeline, DDIMScheduler, PNDMScheduler
+from huggingface_hub import HfApi
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def load_pipeline_from_workspace(model_path, cache_dir, device):
     """Load the Realistic Vision model pipeline from a specified cache directory."""
@@ -29,11 +34,33 @@ def save_generated_image(image, path):
     image.save(path)
     print(f"Image saved at {path}")
 
+def upload_to_huggingface(image_path, repo_id, commit_message="Add new image"):
+    """Upload the generated image to a private Hugging Face repository."""
+    token = os.getenv("HF_API_TOKEN")
+    api = HfApi()
+
+    # Check if the repository exists; if not, create it
+    try:
+        api.repo_info(repo_id, repo_type="dataset", token=token)
+    except Exception:
+        api.create_repo(repo_id=repo_id, repo_type="dataset", token=token, exist_ok=True, private=True)
+
+    # Upload the file
+    api.upload_file(
+        path_or_fileobj=image_path,
+        path_in_repo=os.path.basename(image_path),
+        repo_id=repo_id,
+        repo_type="dataset",
+        token=token,
+        commit_message=commit_message
+    )
+
 def main():
     # Define model parameters and device
     model_path = "SG161222/Realistic_Vision_V6.0_B1_noVAE"
     cache_dir = "/workspace/ai_models"
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(device)
 
     # Load the pipeline from the workspace
     pipeline = load_pipeline_from_workspace(model_path, cache_dir, device)
@@ -49,7 +76,12 @@ def main():
 
     # Generate and save the image
     generated_image = generate_image_with_params(pipeline, prompt, inference_steps, cfg_scale)
-    save_generated_image(generated_image, "generated_image.png")
+    image_path = "generated_image.png"
+    save_generated_image(generated_image, image_path)
+
+    # Upload the image to Hugging Face
+    repo_id = "xxthekingxx/realistic_repo_2025_advanced"
+    upload_to_huggingface(image_path, repo_id)
 
 if __name__ == "__main__":
     main()
